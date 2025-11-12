@@ -7,10 +7,13 @@ export default class PlaylistController{
 
             const userId = req.user.id;
 
+
+            console.log(userId,"userId", name,"name");
             const existingPlaylist  = await db.playList.findUnique({
                 where:{
                     name_userId:{
-                        name, userId
+                         userId:userId,
+                         name:name
                     } 
                 }
             })

@@ -7,6 +7,7 @@ import {
     Eye,
     EyeOff,
     Loader,
+    Loader2,
     Lock,
     Mail
 } from "lucide-react"

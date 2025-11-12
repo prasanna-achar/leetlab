@@ -1,7 +1,7 @@
-import React , { useState, useMemo } from 'react'
+import React , { useEffect, useMemo, useState } from 'react'
 import useAuthStore from '../store/useAuthStore'
 import {Link} from 'react-router-dom'
-import {Bookmark, PencilIcon , Trash, TrashIcon, Plus, } from 'lucide-react'
+import {Bookmark, PencilIcon , TrashIcon } from 'lucide-react'
 
 function ProblemTable({problems}) {
     const {authUser} = useAuthStore();
@@ -25,7 +25,7 @@ function ProblemTable({problems}) {
 
     const filteredProblems = useMemo(()=>{
         return(problems|| [])
-        .filter((problem) => problem.title.toLowerCase().includes(search.toLowerCase()))
+        .filter((problem) => problem.title?.toLowerCase().includes(search.toLowerCase()))
         .filter((problem)=> difficulty === "ALL" ? true : problem.difficulty?.includes(difficulty))
         .filter((problem) => selectedTag === "ALL" ? true : problem.tags?.includes(selectedTag))
     }, [problems, search, selectedTag, difficulty])
@@ -39,69 +39,75 @@ function ProblemTable({problems}) {
        )
     }, [filteredProblems, currentPage])
 
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search, selectedTag, difficulty, problems])
+
     const handleDelete =() =>{}
     const handleAddToPlaylist =() =>{}
 
-    return (
-        <div className='col-start-1 lg:col-start-3 col-end-10 w-full  mx-auto px-4 py-16'>
-            <div className=' flex justify-between items-center mb-6'>
-                <h2 className='text-2xl font-bold'>
-                    Problems
-                </h2>
-                <button
-                    className='btn btn-primary bg-red-600 shadow-2xs shadow-red-400 border-red-400 gap-2'
-                >
-                    <Plus className='w-4 h-4'/>
-                    Create Playlist
-                </button>
-            </div>
-            <div className='flex flex-wrap justify-between items-center mb-6 gap-4'>
-                <input type="text" 
-                placeholder='Search by Title'
-                className='input input-bordered  md:w-1/3 bg-linear-to-br bg-cover from-[#000000] to-[#3d3d3d]'
-                onChange={(e) => setSearch(e.target.value)}
-                />
-                <select 
-                className='select select-bordered bg-linear-to-br bg-cover from-[#000000] to-[#3d3d3d]'
-                value= {difficulty}
-                onChange={(e)=> setDifficulty(e.target.value)}
-                >
-                    <option value="ALL">All Difficulties</option>
-                    {difficulties.map((diff) => (
-                        <option key={diff} value={diff}>
-                            {diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase()}
-                        </option>
-                    ))}
-                </select>
+    const totalPages = Math.max(1, Math.ceil(filteredProblems.length / problemsPerPage))
 
-                <select
-                className='select select-bordered bg-linear-to-br bg-cover from-[#000000] to-[#3d3d3d]'
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value)}
-                >
-                    <option value="ALL">All tags</option>
-                    {allTags.map((tag) =>(
-                        <option value={tag} key={tag}>
-                            {tag}
-                        </option>
-                    ))}
-                </select>
+    return (
+        <div className='space-y-6'>
+            <div className='flex flex-col gap-4 rounded-2xl border border-white/5 bg-white/5 p-5 shadow-inner shadow-black/20 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='space-y-1'>
+                    <h2 className='text-xl font-semibold text-white'>Problems</h2>
+                    <p className='text-sm text-slate-400'>
+                        Search, filter, and practice from curated coding challenges.
+                    </p>
+                </div>
+                <div className='flex flex-col gap-3 sm:flex-row'>
+                    <input type="text" 
+                        placeholder='Search by title or keyword'
+                        className='input input-bordered w-full bg-slate-950/60 sm:w-56'
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                    <div className='flex flex-col gap-3 sm:flex-row'>
+                        <select 
+                            className='select select-bordered w-full bg-slate-950/60 sm:w-36'
+                            value= {difficulty}
+                            onChange={(e)=> setDifficulty(e.target.value)}
+                        >
+                            <option value="ALL">All Difficulties</option>
+                            {difficulties.map((diff) => (
+                                <option key={diff} value={diff}>
+                                    {diff.charAt(0).toUpperCase() + diff.slice(1).toLowerCase()}
+                                </option>
+                            ))}
+                        </select>
+
+                        <select
+                            className='select select-bordered w-full bg-slate-950/60 sm:w-40'
+                            value={selectedTag}
+                            onChange={(e) => setSelectedTag(e.target.value)}
+                        >
+                            <option value="ALL">All tags</option>
+                            {allTags.map((tag) =>(
+                                <option value={tag} key={tag}>
+                                    {tag}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div>
-                <table className='table rounded-xl bg-linear-to-br bg-cover from-[#3d3d3d] to-[#000000]'>
-                    <thead className='w-fit bg-linear-to-br bg-cover from-[#000000] to-[#3d3d3d] text-white '>
+            <div className='overflow-hidden rounded-2xl border border-white/5 shadow-xl shadow-black/30'>
+                <table className='table table-pin-rows w-full'>
+                    <thead className='bg-slate-950/70 text-xs uppercase tracking-wide text-slate-300'>
                         <tr>
-                            <th>Solved</th>
-                            <th>Title</th>
-                            <th>Tags</th>
-                            <th>Difficulty</th>
-                            <th>Actions</th>
+                            <th className='font-semibold'>Solved</th>
+                            <th className='font-semibold'>Title</th>
+                            <th className='font-semibold'>Tags</th>
+                            <th className='font-semibold'>Difficulty</th>
+                            <th className='font-semibold'>Actions</th>
                         </tr>
                     </thead>
-                    <tbody className='overflow'>
+                    <tbody className='divide-y divide-white/5 bg-slate-950/40'>
                         {paginatedProblems.length > 0 ? (
                             paginatedProblems.map((problem) => {
-                const isSolved = problem.problemSolved.some(
+                const isSolved = problem.problemSolved?.some(
                   (user) => user.userId === authUser?.id
                 );
                 return (
@@ -115,16 +121,20 @@ function ProblemTable({problems}) {
                       />
                     </td>
                     <td>
-                      <Link to={`/problem/${problem.id}`} className="font-semibold hover:underline">
+                      <Link to={`/problem/${problem.id}`} className="font-semibold text-white hover:text-rose-400 hover:underline">
                         {problem.title}
                       </Link>
+                      <p className="text-xs text-slate-400">
+                        {problem.description?.slice(0, 90)}
+                        {problem.description && problem.description.length > 90 ? '…' : ''}
+                      </p>
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1">
                         {(problem.tags || []).map((tag, idx) => (
                           <span
                             key={idx}
-                            className="badge badge-outline badge-warning text-xs font-bold"
+                            className="badge badge-outline border-rose-500/60 bg-rose-500/10 text-xs font-medium text-rose-200"
                           >
                             {tag}
                           </span>
@@ -145,22 +155,22 @@ function ProblemTable({problems}) {
                       </span>
                     </td>
                     <td>
-                      <div className="flex flex-col md:flex-row gap-2 items-start md:items-center">
+                      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
                         {authUser?.userRole === "ADMIN" && (
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleDelete(problem.id)}
-                              className="btn btn-sm btn-error"
+                              className="btn btn-sm btn-error btn-outline"
                             >
                               <TrashIcon className="w-4 h-4 text-white" />
                             </button>
-                            <button disabled className="btn btn-sm btn-warning">
+                            <button disabled className="btn btn-sm btn-warning btn-outline opacity-60">
                               <PencilIcon className="w-4 h-4 text-white" />
                             </button>
                           </div>
                         )}
                         <button
-                          className="btn btn-sm btn-outline flex gap-2 items-center"
+                          className="btn btn-sm btn-outline flex gap-2 items-center border-rose-500/60 text-rose-200 hover:border-rose-500 hover:text-white"
                           onClick={() => handleAddToPlaylist(problem.id)}
                         >
                           <Bookmark className="w-4 h-4" />
@@ -172,12 +182,27 @@ function ProblemTable({problems}) {
                 );
               })
             )  :
-                        (<p>Problems Not available</p>)}
+                        (<tr>
+                            <td colSpan={5} className='py-10 text-center text-slate-400'>
+                                Problems Not available
+                            </td>
+                        </tr>)}
                     </tbody>
                 </table>
-                <div className='w-full flex items-center justify-center  mt-8'>
+                <div className='flex items-center justify-between gap-4 border-t border-white/5 bg-slate-950/60 px-5 py-4 text-sm text-slate-300'>
+                  <span>
+                    Showing{' '}
+                    <span className='font-semibold text-white'>
+                      {paginatedProblems.length}
+                    </span>{' '}
+                    of{' '}
+                    <span className='font-semibold text-white'>
+                      {filteredProblems.length}
+                    </span>{' '}
+                    problems
+                  </span>
                    <button
-                  className='btn btn-primary'
+                  className='btn btn-sm btn-outline border-white/20 text-slate-200 hover:border-rose-500 hover:text-white'
                   onClick={() => {
                     if(currentPage === 1){
                       return
@@ -186,15 +211,15 @@ function ProblemTable({problems}) {
                   }}>
                     Prev
                   </button>
-                  <span>
-                    {currentPage}/{Math.ceil(paginatedProblems.length/ problemsPerPage)}
+                  <span className='rounded-full bg-white/10 px-4 py-1 font-semibold text-white'>
+                    {currentPage} / {totalPages}
                   </span>
 
                  
                   <button 
-                  className='btn btn-primary'
+                  className='btn btn-sm btn-outline border-white/20 text-slate-200 hover:border-rose-500 hover:text-white'
                   onClick={() => {
-                    if(Math.ceil(paginatedProblems.length / problemsPerPage) === currentPage){
+                    if(totalPages === currentPage){
                       return
                     }
                     setCurrentPage(currentPage+1)

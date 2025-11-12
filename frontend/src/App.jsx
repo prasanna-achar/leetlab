@@ -18,44 +18,46 @@ function App() {
   useEffect(()=>{
     checkAuth()
   }, [checkAuth])
-  if(isCheckingAuth && !authUser){
-    return(
-      <div className="flex items-center justify-center h-screen">
-        <Loader className="size-10 animate-spin"/>
+  if (isCheckingAuth && !authUser) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <Loader className="size-10 animate-spin text-rose-500" />
       </div>
     )
   }
   return (
-    <div className="flex flex-col items-center justify-start h-[100vh] ">
-      <Toaster />
-      <Routes>
-        <Route 
-        path="/"
-        element={authUser ? <Layout /> : <Navigate to={`/login`}/>}>
-          <Route
-          index
-          element={<Home />} 
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100">
+      <Toaster position="top-center" />
+      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-12 sm:px-6 lg:px-8">
+        <Routes>
+          <Route 
+          path="/"
+          element={authUser ? <Layout /> : <Navigate to={`/login`}/>}>
+            <Route
+            index
+            element={<Home />} 
+            />
+            <Route path='/problems' element={<ProblemsPage />}/>
+
+          </Route>
+          <Route 
+          path='/signup' 
+          element={!authUser? <SignUpPage /> : <Navigate to={"/"}/>} />
+
+          <Route 
+          path='/login' 
+          element={!authUser? <LoginPage /> : <Navigate to={"/"}/>} />
+
+          <Route path='/problem/:id'
+          element={authUser? <ExecutionPage /> : <Navigate to={'/login'}/>}
           />
-          <Route path='/problems' element={<ProblemsPage />}/>
 
-        </Route>
-        <Route 
-        path='/signup' 
-        element={!authUser? <SignUpPage /> : <Navigate to={"/"}/>} />
-
-        <Route 
-        path='/login' 
-        element={!authUser? <LoginPage /> : <Navigate to={"/"}/>} />
-
-        <Route path='/problem/:id'
-        element={authUser? <ExecutionPage /> : <Navigate to={'/login'}/>}
-        />
-
-        <Route element={<AdminRoute />}>
-          <Route path='/add-problem' element={authUser? <AddProblem /> : <Navigate to="/login"/>} />
-        </Route>
-    
-      </Routes>
+          <Route element={<AdminRoute />}>
+            <Route path='/add-problem' element={authUser? <AddProblem /> : <Navigate to="/login"/>} />
+          </Route>
+      
+        </Routes>
+      </div>
     </div>
   )
 }

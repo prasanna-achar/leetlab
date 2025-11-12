@@ -35,7 +35,11 @@ function LoginPage() {
     register,
     formState:{errors}
   } = useForm({
-    resolver: zodResolver(authService.LoginSchema)
+    resolver: zodResolver(authService.LoginSchema),
+    default:{
+      email:"",
+      password:""
+    }
   })
   // if(isLoggingIn){
   //   return(
