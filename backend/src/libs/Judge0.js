@@ -29,7 +29,7 @@ class Judge0API{
     async submitBatch(submissions){
         try {
             
-            const data = await axios.post(`http://127.0.0.1:2358/submissions/batch?base64_encoded=false`, {
+            const data = await axios.post(`${this.conn}/submissions/batch?base64_encoded=false`, {
             submissions
             })
 
@@ -38,6 +38,7 @@ class Judge0API{
             return data;
         } catch (error) {
             console.log(error.message)
+            throw error;
         }
     }
 

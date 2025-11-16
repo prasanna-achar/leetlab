@@ -15,8 +15,20 @@ const PORT = process.env.PORT || 8080
 
 const app = express()
 app.use(cookieParser())
+// CORS configuration - allow frontend and same origin for production
+const allowedOrigins = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost'];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // 👈 don't use '*'
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests) or from allowed origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true                // 👈 allow credentials
 }));
 app.use(express.json())

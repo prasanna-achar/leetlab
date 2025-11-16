@@ -49,7 +49,7 @@ export default class ExecutionController{
                 const actualOutput = result.stdout?.trim()
                 const expected_output = expected_outputs[i]?.trim()
                 const passed = actualOutput === expected_output;
-                result.stdout = result.stdout.trim()
+                result.stdout = result.stdout?.trim()
                 result.stdin = stdin[i]
                 result.expected_output = expected_outputs[i]?.trim()
                 result.passed = passed;

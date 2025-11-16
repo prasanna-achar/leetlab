@@ -112,3 +112,5 @@ This guide captures the visual language used across the Code Chaos frontend and 
 
 Sticking to this guide will keep Code Chaos visually cohesive and welcoming for learners. When in doubt, reuse existing patterns, and update the guide if you intentionally diverge for a new, reusable pattern.
 
+
+

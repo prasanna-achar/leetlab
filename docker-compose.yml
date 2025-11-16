@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # Judge0 Services
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    container_name: judge0-server
+    volumes:
+      - ./judge0-v1.13.1/judge0.conf:/judge0.conf:ro
+    ports:
+      - "2358:2358"
+    privileged: true
+    depends_on:
+      - judge0-redis
+      - judge0-db
+    environment:
+      - REDIS_HOST=judge0-redis
+      - POSTGRES_HOST=judge0-db
+    restart: always
+    networks:
+      - leetlab-network
+
+  judge0-workers:
+    image: judge0/judge0:1.13.1
+    container_name: judge0-workers
+    command: ["./scripts/workers"]
+    volumes:
+      - ./judge0-v1.13.1/judge0.conf:/judge0.conf:ro
+    privileged: true
+    depends_on:
+      - judge0-redis
+      - judge0-db
+    environment:
+      - REDIS_HOST=judge0-redis
+      - POSTGRES_HOST=judge0-db
+    restart: always
+    networks:
+      - leetlab-network
+
+  judge0-db:
+    image: postgres:16.2
+    container_name: judge0-db
+    env_file:
+      - ./judge0-v1.13.1/judge0.conf
+    volumes:
+      - judge0-db-data:/var/lib/postgresql/data/
+    restart: always
+    networks:
+      - leetlab-network
+
+  judge0-redis:
+    image: redis:7.2.4
+    container_name: judge0-redis
+    command: [
+      "bash", "-c",
+      'docker-entrypoint.sh --appendonly no --requirepass "$$REDIS_PASSWORD"'
+    ]
+    env_file:
+      - ./judge0-v1.13.1/judge0.conf
+    restart: always
+    networks:
+      - leetlab-network
+
+  # Application Database
+  app-db:
+    image: postgres:16.2
+    container_name: leetlab-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-leetlab}
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - leetlab-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: leetlab-backend
+    environment:
+      - PORT=${BACKEND_PORT:-8080}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@app-db:5432/${DB_NAME:-leetlab}
+      - JUDGE0_API=http://judge0-server:2358
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - NODE_ENV=production
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,http://localhost:80}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      app-db:
+        condition: service_healthy
+      judge0-server:
+        condition: service_started
+    restart: always
+    networks:
+      - leetlab-network
+    command: sh -c "npx prisma migrate deploy && node src/index.js"
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_CONNECTION_URL=/api/v1
+    container_name: leetlab-frontend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - leetlab-network
+
+volumes:
+  judge0-db-data:
+  app-db-data:
+
+networks:
+  leetlab-network:
+    driver: bridge
+
